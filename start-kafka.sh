@@ -11,7 +11,7 @@ mkdir -p ${DATA_DIR}
 
 sed -i \
     -e "s@zookeeper\.connect=localhost@zookeeper.connect=${ZK01_PORT_2181_TCP_ADDR}@" \
-    -e "s@#advertised.host\.name=localhost@host.name=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}@" \
+    -e "s@#advertised.host\.name=.*@advertised.host.name=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}@" \
     -e "s@broker\.id=0@broker.id=${KAFKA_BROKER_ID:-0}@" \
     -e "s@log\.dirs=/tmp/kafka-logs@log.dirs=${DATA_DIR}@" \
     ${SERVER_CONFIG_FILE}
