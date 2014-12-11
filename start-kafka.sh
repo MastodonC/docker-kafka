@@ -4,10 +4,12 @@ LOG_CONFIG_FILE=/kafka/config/log4j.properties
 SERVER_CONFIG_FILE=/kafka/config/server.properties
 
 LOGS_DIR="/logs/kafka/${HOSTNAME}/${BROKER_ID}"
-mkdir -p "${LOGS_DIR}"
-
 DATA_DIR="/data/kafka/${HOSTNAME}/${BROKER_ID}"
+
+function join { local IFS="$1"; shift; echo "$*"; }
+
 mkdir -p ${DATA_DIR}
+mkdir -p "${LOGS_DIR}"
 
 sed -i \
     -e "s@#advertised.host\.name=.*@advertised.host.name=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}@" \
@@ -25,8 +27,6 @@ sed -i \
     ${LOG_CONFIG_FILE}
 
 #Add entries for zookeeper peers.
-function join { local IFS="$1"; shift; echo "$*"; }
-
 hosts=()
 for i in $(seq 255)
 do
