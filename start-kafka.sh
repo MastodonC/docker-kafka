@@ -39,7 +39,7 @@ done
 echo "Zookeeper connect string is ${ZK_CONNECT}"
 
 sed -i \
-     -e "s@zookeeper\.connect=localhost@zookeeper.connect=${ZK_CONNECT}@" \
+     -e "s@zookeeper\.connect=.*@zookeeper.connect=${ZK_CONNECT}@" \
      ${SERVER_CONFIG_FILE}
 
 
