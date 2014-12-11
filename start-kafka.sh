@@ -10,7 +10,6 @@ DATA_DIR="/data/kafka/${HOSTNAME}/${BROKER_ID}"
 mkdir -p ${DATA_DIR}
 
 sed -i \
-    -e "s@zookeeper\.connect=localhost@zookeeper.connect=${ZK01_PORT_2181_TCP_ADDR}@" \
     -e "s@#advertised.host\.name=.*@advertised.host.name=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}@" \
     -e "s@broker\.id=0@broker.id=${KAFKA_BROKER_ID:-0}@" \
     -e "s@log\.dirs=/tmp/kafka-logs@log.dirs=${DATA_DIR}@" \
@@ -24,6 +23,25 @@ sed -i \
     -e "s@kafka.logs.dir=.*@kafka.logs.dir=${LOGS_DIR}/@" \
     -e "/log4j.logger.kafka=INFO, kafkaAppender/d" \
     ${LOG_CONFIG_FILE}
+
+#Add entries for zookeeper peers.
+ZK_CONNECT="${ZK01_PORT_2181_TCP_ADDR}:${ZK01_PORT_2181_TCP_PORT}"
+
+for i in $(seq 2 255)
+do
+    zk_name=$(printf "ZK%02d" ${i})
+    zk_addr_name="${zk_name}_PORT_2181_TCP_ADDR"
+    zk_port_name="${zk_name}_PORT_2181_TCP_PORT"
+
+    [ ! -z "${!zk_addr_name}" ] && ZK_CONNECT="${ZK_CONNECT},${!zk_addr_name}:${!zk_port_name}"
+done
+
+echo "Zookeeper connect string is ${ZK_CONNECT}"
+
+sed -i \
+     -e "s@zookeeper\.connect=localhost@zookeeper.connect=${ZK_CONNECT}@" \
+     ${SERVER_CONFIG_FILE}
+
 
 cat <<EOF >> ${LOG_CONFIG_FILE}
 
