@@ -25,17 +25,19 @@ sed -i \
     ${LOG_CONFIG_FILE}
 
 #Add entries for zookeeper peers.
-ZK_CONNECT="${ZK01_PORT_2181_TCP_ADDR}:${ZK01_PORT_2181_TCP_PORT}"
+function join { local IFS="$1"; shift; echo "$*"; }
 
-for i in $(seq 2 255)
+hosts=()
+for i in $(seq 255)
 do
     zk_name=$(printf "ZK%02d" ${i})
     zk_addr_name="${zk_name}_PORT_2181_TCP_ADDR"
     zk_port_name="${zk_name}_PORT_2181_TCP_PORT"
 
-    [ ! -z "${!zk_addr_name}" ] && ZK_CONNECT="${ZK_CONNECT},${!zk_addr_name}:${!zk_port_name}"
+    [ ! -z "${!zk_addr_name}" ] && hosts+=("${!zk_addr_name}:${!zk_port_name}")
 done
 
+ZK_CONNECT=$(join , ${hosts[@]})
 echo "Zookeeper connect string is ${ZK_CONNECT}"
 
 sed -i \
