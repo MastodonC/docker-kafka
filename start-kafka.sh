@@ -4,11 +4,28 @@ LOG_CONFIG_FILE=/kafka/config/log4j.properties
 SERVER_CONFIG_FILE=/kafka/config/server.properties
 
 LOGS_DIR="/logs/kafka/${HOSTNAME}/${BROKER_ID}"
-DATA_DIR="/data/kafka/${HOSTNAME}/${BROKER_ID}"
+
 
 function join { local IFS="$1"; shift; echo "$*"; }
 
-mkdir -p ${DATA_DIR}
+if [ -z "${DATA01_DIR}" ] ; then
+    DATA_DIR="/data/kafka/${HOSTNAME}/${BROKER_ID}"
+    mkdir -p ${DATA_DIR}
+else
+    ddirs=()
+    for i in $(seq 255); do
+	ddir_name=$(printf "DATA%02d_DIR" ${i})
+	the_dir="${!ddir_name}"
+	if [ -n "${the_dir}" ]; then
+	    ddirs+=(${the_dir})
+	    mkdir -p ${the_dir}
+	fi
+    done
+    DATA_DIR=$(join , ${ddirs[@]})
+fi
+
+echo "log.dirs/DATA_DIR is ${DATA_DIR}"
+
 mkdir -p "${LOGS_DIR}"
 
 sed -i \
