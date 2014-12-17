@@ -3,13 +3,14 @@
 LOG_CONFIG_FILE=/kafka/config/log4j.properties
 SERVER_CONFIG_FILE=/kafka/config/server.properties
 
-LOGS_DIR="/logs/kafka/${HOSTNAME}/${BROKER_ID}"
+LOGS_DIR="/logs/kafka/${HOSTNAME}/${KAFKA_BROKER_ID}"
 
+DATA_DIR_TAIL="kafka/${HOSTNAME}/${KAFKA_BROKER_ID}"
 
 function join { local IFS="$1"; shift; echo "$*"; }
 
 if [ -z "${DATA01_DIR}" ] ; then
-    DATA_DIR="/data/kafka/${HOSTNAME}/${BROKER_ID}"
+    DATA_DIR="/data/${DATA_DIR_TAIL}"
     mkdir -p ${DATA_DIR}
 else
     ddirs=()
@@ -17,7 +18,7 @@ else
 	ddir_name=$(printf "DATA%02d_DIR" ${i})
 	the_dir="${!ddir_name}"
 	if [ -n "${the_dir}" ]; then
-	    ddirs+=(${the_dir})
+	    ddirs+=("${the_dir}/${DATA_DIR_TAIL}")
 	    mkdir -p ${the_dir}
 	fi
     done
