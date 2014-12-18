@@ -1,42 +1,50 @@
 #!/bin/bash
 
+# empty array if nothing found globbing.
+shopt -s failglob
+
 LOG_CONFIG_FILE=/kafka/config/log4j.properties
 SERVER_CONFIG_FILE=/kafka/config/server.properties
 
-LOGS_DIR="/logs/kafka/${HOSTNAME}/${KAFKA_BROKER_ID}"
+BROKER_ID=${KAFKA_BROKER_ID:-0}
+ADVERTISED_HOSTNAME=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}
+ADVERTISED_PORT=${KAFKA_ADVERTISED_PORT:-9092}
 
-DATA_DIR_TAIL="kafka/${HOSTNAME}/${KAFKA_BROKER_ID}"
+DIR_TAIL="kafka/${HOSTNAME}/${BROKER_ID}"
+LOGS_DIR="/logs/${DIR_TAIL}"
 
 function join { local IFS="$1"; shift; echo "$*"; }
 
-if [ -z "${DATA01_DIR}" ] ; then
-    DATA_DIR="/data/${DATA_DIR_TAIL}"
-    mkdir -p ${DATA_DIR}
+if [ -z "${DATA_DIR_PATTERN}" ] ; then
+    DATA_DIRS="/data/${DIR_TAIL}"
+    mkdir -p ${DATA_DIRS}
 else
     ddirs=()
-    for i in $(seq 255); do
-	ddir_name=$(printf "DATA%02d_DIR" ${i})
-	the_dir="${!ddir_name}"
-	if [ -n "${the_dir}" ]; then
-	    ddirs+=("${the_dir}/${DATA_DIR_TAIL}")
-	    mkdir -p ${the_dir}
-	fi
+    candidates=(${DATA_DIR_PATTERN})
+    for dir in ${candidates[@]}
+    do
+	thedir="$(pwd)${dir}/${DIR_TAIL}"
+	mkdir -p ${thedir}
+	ddirs+=("${thedir}")
     done
-    DATA_DIR=$(join , ${ddirs[@]})
+    DATA_DIRS=$(join , ${ddirs[@]})
 fi
 
-echo "log.dirs/DATA_DIR is ${DATA_DIR}"
+echo "ADVERTISED_HOSTNAME is ${ADVERTISED_HOSTNAME}"
+echo "ADVERTISED_PORT is ${ADVERTISED_PORT}"
+echo "DATA_DIRS is ${DATA_DIRS}"
+echo "BROKER_ID is ${BROKER_ID}"
 
 mkdir -p "${LOGS_DIR}"
 
 sed -i \
-    -e "s@#advertised.host\.name=.*@advertised.host.name=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}@" \
-    -e "s@broker\.id=0@broker.id=${KAFKA_BROKER_ID:-0}@" \
-    -e "s@log\.dirs=/tmp/kafka-logs@log.dirs=${DATA_DIR}@" \
+    -e "s@#advertised.host\.name=.*@advertised.host.name=${ADVERTISED_HOSTNAME}@" \
+    -e "s@broker\.id=0@broker.id=${BROKER_ID}@" \
+    -e "s@log\.dirs=/tmp/kafka-logs@log.dirs=${DATA_DIRS}@" \
     ${SERVER_CONFIG_FILE}
 
 sed -i \
-    -e "s@#advertised\.port=.*@advertised.port=${KAFKA_ADVERTISED_PORT:-9092}@" \
+    -e "s@#advertised\.port=.*@advertised.port=${ADVERTISED_PORT}@" \
     ${SERVER_CONFIG_FILE}
 
 sed -i \
