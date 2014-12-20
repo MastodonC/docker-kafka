@@ -12,6 +12,7 @@ ADVERTISED_PORT=${KAFKA_ADVERTISED_PORT:-9092}
 
 DIR_TAIL="kafka/${HOSTNAME}/${BROKER_ID}"
 LOGS_DIR="/logs/${DIR_TAIL}"
+ZK_CHROOT=${ZK_CHROOT:-/}
 
 function join { local IFS="$1"; shift; echo "$*"; }
 
@@ -34,6 +35,7 @@ echo "ADVERTISED_HOSTNAME is ${ADVERTISED_HOSTNAME}"
 echo "ADVERTISED_PORT is ${ADVERTISED_PORT}"
 echo "DATA_DIRS is ${DATA_DIRS}"
 echo "BROKER_ID is ${BROKER_ID}"
+echo "ZK_CHROOT is ${ZK_CHROOT}"
 
 mkdir -p "${LOGS_DIR}"
 
@@ -60,10 +62,10 @@ do
     zk_addr_name="${zk_name}_PORT_2181_TCP_ADDR"
     zk_port_name="${zk_name}_PORT_2181_TCP_PORT"
 
-    [ ! -z "${!zk_addr_name}" ] && hosts+=("${!zk_addr_name}:${!zk_port_name}/kafka")
+    [ ! -z "${!zk_addr_name}" ] && hosts+=("${!zk_addr_name}:${!zk_port_name}")
 done
 
-ZK_CONNECT=$(join , ${hosts[@]})
+ZK_CONNECT="$(join , ${hosts[@]})${ZK_CHROOT}"
 echo "Zookeeper connect string is ${ZK_CONNECT}"
 
 sed -i \
