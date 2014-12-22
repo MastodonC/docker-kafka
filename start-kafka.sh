@@ -9,6 +9,7 @@ SERVER_CONFIG_FILE=/kafka/config/server.properties
 BROKER_ID=${KAFKA_BROKER_ID:-0}
 ADVERTISED_HOSTNAME=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}
 ADVERTISED_PORT=${KAFKA_ADVERTISED_PORT:-9092}
+MAX_MESSAGE_SIZE=${KAFKA_MAX_MESSAGE_SIZE:-1000000}
 
 DIR_TAIL="kafka/${HOSTNAME}/${BROKER_ID}"
 LOGS_DIR="/logs/${DIR_TAIL}"
@@ -36,6 +37,7 @@ echo "ADVERTISED_PORT is ${ADVERTISED_PORT}"
 echo "DATA_DIRS is ${DATA_DIRS}"
 echo "BROKER_ID is ${BROKER_ID}"
 echo "ZK_CHROOT is ${ZK_CHROOT}"
+echo "MAX_MESSAGE_SIZE is ${MAX_MESSAGE_SIZE}"
 
 mkdir -p "${LOGS_DIR}"
 
@@ -48,6 +50,9 @@ sed -i \
 sed -i \
     -e "s@#advertised\.port=.*@advertised.port=${ADVERTISED_PORT}@" \
     ${SERVER_CONFIG_FILE}
+
+echo "replica.fetch.max.bytes=${MAX_MESSAGE_SIZE}" >> ${SERVER_CONFIG_FILE}
+echo "message.max.bytes=${MAX_MESSAGE_SIZE}" >> ${SERVER_CONFIG_FILE}
 
 sed -i \
     -e "s@kafka.logs.dir=.*@kafka.logs.dir=${LOGS_DIR}/@" \
