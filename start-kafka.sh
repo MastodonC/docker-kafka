@@ -9,7 +9,8 @@ SERVER_CONFIG_FILE=/kafka/config/server.properties
 BROKER_ID=${KAFKA_BROKER_ID:-0}
 ADVERTISED_HOSTNAME=${KAFKA_ADVERTISED_HOSTNAME:-$(hostname -I)}
 ADVERTISED_PORT=${KAFKA_ADVERTISED_PORT:-9092}
-MAX_MESSAGE_SIZE=${KAFKA_MAX_MESSAGE_SIZE:-1000000}
+
+MAX_MESSAGE_SIZE=${KAFKA_MAX_MESSAGE_SIZE:-$(( 16 * 1024 * 1024 ))} # default 16Mb
 
 DIR_TAIL="kafka/${HOSTNAME}/${BROKER_ID}"
 LOGS_DIR="/logs/${DIR_TAIL}"
@@ -25,19 +26,28 @@ else
     candidates=(${DATA_DIR_PATTERN})
     for dir in ${candidates[@]}
     do
-	thedir="$(pwd)${dir}/${DIR_TAIL}"
-	mkdir -p ${thedir}
-	ddirs+=("${thedir}")
+        thedir="$(pwd)${dir}/${DIR_TAIL}"
+        mkdir -p ${thedir}
+        ddirs+=("${thedir}")
     done
     DATA_DIRS=$(join , ${ddirs[@]})
 fi
+
+function bytes_for_humans {
+    local -i bytes=$1;
+    if [[ $bytes -lt 1048576 ]]; then
+        echo "$(( (bytes + 1023)/1024 ))KiB"
+    else
+        echo "$(( (bytes + 1048575)/1048576 ))MiB"
+    fi
+}
 
 echo "ADVERTISED_HOSTNAME is ${ADVERTISED_HOSTNAME}"
 echo "ADVERTISED_PORT is ${ADVERTISED_PORT}"
 echo "DATA_DIRS is ${DATA_DIRS}"
 echo "BROKER_ID is ${BROKER_ID}"
 echo "ZK_CHROOT is ${ZK_CHROOT}"
-echo "MAX_MESSAGE_SIZE is ${MAX_MESSAGE_SIZE}"
+echo "MAX_MESSAGE_SIZE is ${MAX_MESSAGE_SIZE} $(bytes_for_humans ${MAX_MESSAGE_SIZE})"
 
 mkdir -p "${LOGS_DIR}"
 
