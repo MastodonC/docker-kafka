@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /etc/mastodonc/docker-functions
+
 # empty array if nothing found globbing.
 shopt -s failglob
 
@@ -54,11 +56,6 @@ sed -i \
 echo "replica.fetch.max.bytes=${MAX_MESSAGE_SIZE}" >> ${SERVER_CONFIG_FILE}
 echo "message.max.bytes=${MAX_MESSAGE_SIZE}" >> ${SERVER_CONFIG_FILE}
 
-sed -i \
-    -e "s@kafka.logs.dir=.*@kafka.logs.dir=${LOGS_DIR}/@" \
-    -e "/log4j.logger.kafka=INFO, kafkaAppender/d" \
-    ${LOG_CONFIG_FILE}
-
 #Add entries for zookeeper peers.
 hosts=()
 for i in $(seq 255)
@@ -77,16 +74,7 @@ sed -i \
      -e "s@zookeeper\.connect=.*@zookeeper.connect=${ZK_CONNECT}@" \
      ${SERVER_CONFIG_FILE}
 
+export LOGS_DIR
 
-cat <<EOF >> ${LOG_CONFIG_FILE}
-
-# Add Logstash Appender
-log4j.appender.logstashAppender=org.apache.log4j.net.SocketAppender
-log4j.appender.logstashAppender.Port=${LOGSTASH01_PORT_4561_TCP_PORT}
-log4j.appender.logstashAppender.RemoteHost=${LOGSTASH01_PORT_4561_TCP_ADDR}
-log4j.appender.logstashAppender.ReconnectionDelay=30000
-
-log4j.logger.kafka=INFO, kafkaAppender, logstashAppender
-EOF
-
-/kafka/bin/kafka-server-start.sh /kafka/config/server.properties
+ensure_rsyslog_running && \
+    /kafka/bin/kafka-server-start.sh /kafka/config/server.properties
