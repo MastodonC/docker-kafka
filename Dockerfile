@@ -1,6 +1,6 @@
 FROM mastodonc/basejava
 
-RUN curl -sL http://www.mirrorservice.org/sites/ftp.apache.org/kafka/0.8.1.1/kafka_2.10-0.8.1.1.tgz | \
+RUN curl -sL http://www.mirrorservice.org/sites/ftp.apache.org/kafka/0.8.2.2/kafka_2.10-0.8.2.2.tgz | \
     tar -xzf - -C / --transform 's@\([a-z-]*\)[-_][0-9\.-]*@\1@'
 
 RUN cd /kafka/libs && \
